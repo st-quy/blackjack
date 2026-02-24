@@ -4,15 +4,21 @@ import {
 } from './constants.js';
 
 /**
- * Get all possible scores for a hand, considering Ace flexibility (1, 10, or 11)
+ * Get all possible scores for a hand, considering Ace flexibility.
+ * Ace = 10 or 11 with ≤ 3 cards; Ace = 1 with ≥ 4 cards.
  */
 function getPossibleScores(cards) {
     let scores = [0];
+    const cardCount = cards.length;
 
     for (const card of cards) {
-        const values = Array.isArray(RANK_VALUES[card.rank])
-            ? RANK_VALUES[card.rank]
-            : [RANK_VALUES[card.rank]];
+        let values;
+        if (card.rank === 'A') {
+            // Ace = 10 or 11 when 3 cards or fewer; Ace = 1 when 4+ cards
+            values = cardCount <= 3 ? [10, 11] : [1];
+        } else {
+            values = [RANK_VALUES[card.rank]];
+        }
 
         const newScores = [];
         for (const score of scores) {
@@ -199,15 +205,10 @@ export function getPayoutMultiplier(playerCards, hostCards) {
     const comparison = compareHands(playerCards, hostCards);
 
     if (comparison > 0) {
-        // Player wins
-        // Special hands pay double
-        if (playerHand.type === HAND_TYPE.XI_BANG) return 2;
-        if (playerHand.type === HAND_TYPE.XI_DACH) return 2;
+        // Player wins — flat 1x payout (no double for special hands)
         return 1;
     } else if (comparison < 0) {
-        // Player loses
-        if (hostHand.type === HAND_TYPE.XI_BANG) return -2;
-        if (hostHand.type === HAND_TYPE.XI_DACH) return -2;
+        // Player loses — flat 1x loss
         return -1;
     }
 

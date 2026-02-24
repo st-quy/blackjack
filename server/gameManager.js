@@ -35,6 +35,7 @@ export function createServerGame(roomId) {
     let roundNumber = 0;
     let turnTimer = null;
     let turnTimeLeft = TURN_TIME;
+    let currentTurnSeatIndex = -1; // sequential turn tracking
 
     function getState() {
         return state;
@@ -64,10 +65,12 @@ export function createServerGame(roomId) {
             roundNumber,
             hostSeatIndex,
             turnTimeLeft,
+            currentTurnSeatIndex,
             seats: seats.map((player, i) => {
                 if (!player) return null;
                 const isMe = player.id === playerId;
                 const showCards = shouldShowCards(player, playerId);
+                const isMyTurn = state === GAME_STATE.PLAYER_TURNS && i === currentTurnSeatIndex && isMe;
                 return {
                     seatIndex: i,
                     name: player.name,
@@ -79,28 +82,28 @@ export function createServerGame(roomId) {
                     result: player.result,
                     payout: player.payout,
                     isMe,
+                    isMyTurn,
                     connected: player.connected,
                     cards: showCards ? player.cards : player.cards.map(() => ({ hidden: true })),
                     hand: showCards && player.cards.length > 0 ? classifyHand(player.cards) : null,
                     score: showCards && player.cards.length > 0 ? getBestScore(player.cards) : null,
-                    canHit: isMe ? canHit(player.cards) : false,
-                    canStay: isMe ? (getBestScore(player.cards) >= MIN_VALID_SCORE || player.cards.length >= 5) && !player.hasStayed : false,
+                    canHit: isMe && isMyTurn ? canHit(player.cards) : false,
+                    canStay: isMe && isMyTurn ? (getBestScore(player.cards) >= MIN_VALID_SCORE || player.cards.length >= 5) && !player.hasStayed : false,
                 };
             }),
         };
     }
 
     function shouldShowCards(player, viewerPlayerId) {
-        const viewer = getSeatByPlayerId(viewerPlayerId);
         // Always show own cards
         if (player.id === viewerPlayerId) return true;
         // During results, show all
         if (state === GAME_STATE.RESULTS) return true;
-        // During host turn, show checked players
+        // During host turn, show checked players to host
         if (state === GAME_STATE.HOST_TURN && player.isChecked) return true;
-        // Host sees own cards during host turn
-        if (player.isHost && state === GAME_STATE.HOST_TURN) return true;
-        // During player turns, hide everyone else's cards
+        // Host cards are ALWAYS hidden until results
+        if (player.isHost && state !== GAME_STATE.RESULTS) return false;
+        // During player turns, hide other players' cards
         if (state === GAME_STATE.PLAYER_TURNS) return false;
         return false;
     }
@@ -150,7 +153,7 @@ export function createServerGame(roomId) {
         if (players.length < 2) return { ok: false, error: 'Cần ít nhất 2 người chơi' };
         if (state !== GAME_STATE.LOBBY && state !== GAME_STATE.RESULTS) return { ok: false, error: 'Không thể chia bài lúc này' };
 
-        // Keep existing host (persistent host) — no rotation
+        // Keep existing host (persistent host)
         roundNumber++;
 
         // Reset
@@ -181,19 +184,60 @@ export function createServerGame(roomId) {
 
         state = GAME_STATE.PLAYER_TURNS;
 
-        // Check if all non-host already stayed
+        // Set first turn: rightmost non-host player (right-to-left order)
         const nonHost = getActiveNonHostPlayers();
         if (nonHost.every(p => p.hasStayed)) {
+            currentTurnSeatIndex = -1;
             state = GAME_STATE.HOST_TURN;
+        } else {
+            currentTurnSeatIndex = getFirstTurnSeatIndex();
         }
 
         return { ok: true };
+    }
+
+    // Get first turn seat: rightmost non-host non-stayed player
+    function getFirstTurnSeatIndex() {
+        for (let i = MAX_SEATS - 1; i >= 0; i--) {
+            if (seats[i] && !seats[i].isHost && !seats[i].hasStayed) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    // Get next turn: right-to-left, skip host and stayed players
+    function getNextTurnSeatIndex(currentSeat) {
+        for (let i = currentSeat - 1; i >= 0; i--) {
+            if (seats[i] && !seats[i].isHost && !seats[i].hasStayed) {
+                return i;
+            }
+        }
+        // Wrap around from the right
+        for (let i = MAX_SEATS - 1; i > currentSeat; i--) {
+            if (seats[i] && !seats[i].isHost && !seats[i].hasStayed) {
+                return i;
+            }
+        }
+        return -1; // No more players
+    }
+
+    function advanceTurn() {
+        const next = getNextTurnSeatIndex(currentTurnSeatIndex);
+        if (next === -1) {
+            // All non-host players done
+            currentTurnSeatIndex = -1;
+            state = GAME_STATE.HOST_TURN;
+        } else {
+            currentTurnSeatIndex = next;
+        }
     }
 
     function hit(playerId) {
         const player = getSeatByPlayerId(playerId);
         if (!player || player.hasStayed) return { ok: false };
         if (state === GAME_STATE.PLAYER_TURNS && player.isHost) return { ok: false };
+        if (state === GAME_STATE.PLAYER_TURNS && player.seatIndex !== currentTurnSeatIndex) return { ok: false, error: 'Chưa đến lượt bạn' };
         if (state === GAME_STATE.HOST_TURN && !player.isHost) return { ok: false };
         if (!canHit(player.cards)) return { ok: false };
 
@@ -206,12 +250,9 @@ export function createServerGame(roomId) {
             autoStayed = true;
         }
 
-        // Check state transitions
-        if (state === GAME_STATE.PLAYER_TURNS) {
-            const nonHost = getActiveNonHostPlayers();
-            if (nonHost.every(p => p.hasStayed)) {
-                state = GAME_STATE.HOST_TURN;
-            }
+        // Advance turn if player finished
+        if (state === GAME_STATE.PLAYER_TURNS && autoStayed) {
+            advanceTurn();
         }
 
         if (state === GAME_STATE.HOST_TURN && player.isHost && hand.type === HAND_TYPE.BUSTED) {
@@ -225,6 +266,7 @@ export function createServerGame(roomId) {
         const player = getSeatByPlayerId(playerId);
         if (!player || player.hasStayed) return { ok: false };
         if (state === GAME_STATE.PLAYER_TURNS && player.isHost) return { ok: false };
+        if (state === GAME_STATE.PLAYER_TURNS && player.seatIndex !== currentTurnSeatIndex) return { ok: false, error: 'Chưa đến lượt bạn' };
 
         const score = getBestScore(player.cards);
         if (score < MIN_VALID_SCORE && player.cards.length < 5) {
@@ -233,11 +275,9 @@ export function createServerGame(roomId) {
 
         player.hasStayed = true;
 
+        // Advance to next player
         if (state === GAME_STATE.PLAYER_TURNS) {
-            const nonHost = getActiveNonHostPlayers();
-            if (nonHost.every(p => p.hasStayed)) {
-                state = GAME_STATE.HOST_TURN;
-            }
+            advanceTurn();
         }
 
         return { ok: true };
@@ -419,6 +459,17 @@ export function createServerGame(roomId) {
         hit,
         stay,
         hostCheck,
+        checkAll(playerId) {
+            if (state !== GAME_STATE.HOST_TURN) return { ok: false };
+            const host = getHost();
+            if (!host || host.id !== playerId) return { ok: false, error: 'Bạn không phải nhà cái' };
+            const hostScore = getBestScore(host.cards);
+            if (hostScore < MIN_VALID_SCORE && host.cards.length < 5) {
+                return { ok: false, error: 'Nhà cái cần ít nhất 16 điểm để xét bài' };
+            }
+            resolveAllUnchecked();
+            return { ok: true };
+        },
         resolveAllUnchecked,
         transferHost,
         playerDisconnected,

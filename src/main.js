@@ -436,8 +436,8 @@ function renderActions() {
     return;
   }
 
-  // PLAYER TURNS: Hit/Stay
-  if (state === GAME_STATE.PLAYER_TURNS && !mySeat.isHost && !mySeat.hasStayed) {
+  // PLAYER TURNS: Hit/Stay (only if it's my turn)
+  if (state === GAME_STATE.PLAYER_TURNS && !mySeat.isHost && mySeat.isMyTurn && !mySeat.hasStayed) {
     // Timer
     bar.appendChild(createTimerElement());
 
@@ -482,6 +482,16 @@ function renderActions() {
     // Check buttons
     const canCheck = (mySeat.score || 0) >= 16 || (mySeat.cards?.length || 0) >= 5;
     if (canCheck) {
+      // Check All button
+      const unchecked = gameState.seats.filter(p => p && !p.isHost && !p.isChecked);
+      if (unchecked.length > 0) {
+        const checkAllBtn = createButton('XÉT TẤT CẢ', 'btn-deal', () => {
+          socket.emit('check-all');
+        });
+        bar.appendChild(checkAllBtn);
+      }
+
+      // Individual check buttons
       gameState.seats.forEach((p, i) => {
         if (p && !p.isHost && !p.isChecked) {
           const checkBtn = createButton(`XÉT ${p.name.toUpperCase()}`, 'btn-check', () => {
@@ -496,11 +506,15 @@ function renderActions() {
 
   // Waiting messages
   if (state === GAME_STATE.PLAYER_TURNS && mySeat.isHost) {
-    bar.innerHTML = '<div style="color:var(--text-secondary);font-size:14px;">⏳ Đang chờ các tụ con ra bài...</div>';
+    const currentPlayer = gameState.seats.find(s => s && s.seatIndex === gameState.currentTurnSeatIndex);
+    const name = currentPlayer ? currentPlayer.name : '...';
+    bar.innerHTML = `<div style="color:var(--text-secondary);font-size:14px;">⏳ Đang chờ <b>${name}</b> ra bài...</div>`;
     return;
   }
-  if (state === GAME_STATE.PLAYER_TURNS && mySeat.hasStayed) {
-    bar.innerHTML = '<div style="color:var(--text-secondary);font-size:14px;">⏳ Đang chờ người khác...</div>';
+  if (state === GAME_STATE.PLAYER_TURNS && (mySeat.hasStayed || !mySeat.isMyTurn)) {
+    const currentPlayer = gameState.seats.find(s => s && s.seatIndex === gameState.currentTurnSeatIndex);
+    const name = currentPlayer ? currentPlayer.name : '...';
+    bar.innerHTML = `<div style="color:var(--text-secondary);font-size:14px;">⏳ Đang chờ <b>${name}</b> ra bài...</div>`;
     return;
   }
   if (state === GAME_STATE.HOST_TURN && !mySeat.isHost) {

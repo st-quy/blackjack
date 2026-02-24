@@ -249,6 +249,21 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('check-all', () => {
+        const roomId = socketRooms.get(socket.id);
+        const room = getRoom(roomId);
+        if (!room) return;
+
+        const result = room.game.checkAll(socket.id);
+        if (!result.ok) {
+            socket.emit('error-msg', { message: result.error || 'Không thể xét tất cả' });
+            return;
+        }
+        room.game.clearTurnTimer();
+        broadcastGameState(roomId);
+        broadcastRoomList();
+    });
+
     socket.on('transfer-host', (data) => {
         const roomId = socketRooms.get(socket.id);
         const room = getRoom(roomId);
