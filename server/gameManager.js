@@ -110,18 +110,29 @@ export function createServerGame(roomId) {
         if (seatIndex < 0 || seatIndex >= MAX_SEATS) return { ok: false, error: 'Ghế không hợp lệ' };
         if (seats[seatIndex] !== null) return { ok: false, error: 'Ghế đã có người' };
         if (state !== GAME_STATE.LOBBY && state !== GAME_STATE.RESULTS) return { ok: false, error: 'Không thể ngồi lúc này' };
-        // Check if already seated
         const existing = getSeatByPlayerId(playerId);
         if (existing) return { ok: false, error: 'Bạn đã có ghế' };
 
         seats[seatIndex] = createPlayer(playerId, name, seatIndex);
+
+        // First player to sit becomes host
+        if (!getHost()) {
+            seats[seatIndex].isHost = true;
+            hostSeatIndex = seatIndex;
+        }
         return { ok: true };
     }
 
     function leaveSeat(playerId) {
         const player = getSeatByPlayerId(playerId);
         if (!player) return { ok: false, error: 'Bạn chưa ngồi' };
+        const wasHost = player.isHost;
         seats[player.seatIndex] = null;
+
+        // If the host left, transfer to next player
+        if (wasHost) {
+            autoAssignHost();
+        }
         return { ok: true };
     }
 
@@ -139,12 +150,8 @@ export function createServerGame(roomId) {
         if (players.length < 2) return { ok: false, error: 'Cần ít nhất 2 người chơi' };
         if (state !== GAME_STATE.LOBBY && state !== GAME_STATE.RESULTS) return { ok: false, error: 'Không thể chia bài lúc này' };
 
-        // Assign host
-        players.forEach(p => p.isHost = false);
+        // Keep existing host (persistent host) — no rotation
         roundNumber++;
-        const hostPlayer = players[roundNumber % players.length];
-        hostPlayer.isHost = true;
-        hostSeatIndex = hostPlayer.seatIndex;
 
         // Reset
         players.forEach(p => {
@@ -332,7 +339,23 @@ export function createServerGame(roomId) {
     function removePlayer(playerId) {
         const player = getSeatByPlayerId(playerId);
         if (player) {
+            const wasHost = player.isHost;
             seats[player.seatIndex] = null;
+            if (wasHost) {
+                autoAssignHost();
+            }
+        }
+    }
+
+    // Auto-assign host to first available player
+    function autoAssignHost() {
+        const remaining = getActivePlayers();
+        if (remaining.length > 0) {
+            remaining.forEach(p => p.isHost = false);
+            remaining[0].isHost = true;
+            hostSeatIndex = remaining[0].seatIndex;
+        } else {
+            hostSeatIndex = -1;
         }
     }
 
