@@ -33,7 +33,17 @@ let turnTimeLeft = TURN_TIME;
 // ============================================================
 function init() {
   renderApp();
-  showNameModal();
+
+  // Check localStorage for saved name
+  const savedName = localStorage.getItem('xidach_name');
+  if (savedName) {
+    playerName = savedName;
+    connectToServer();
+    screen = 'lobby';
+    renderApp();
+  } else {
+    showNameModal();
+  }
 }
 
 function connectToServer() {
@@ -100,7 +110,7 @@ function showNameModal() {
     <div class="name-modal-content">
       <h2>🃏 Xì Dách Online</h2>
       <p style="color: var(--text-secondary); margin-bottom: 16px;">Nhập tên của bạn để bắt đầu</p>
-      <input class="name-input" type="text" placeholder="Tên của bạn..." maxlength="12" value="" autofocus />
+      <input class="name-input" type="text" placeholder="Tên của bạn..." maxlength="12" value="${localStorage.getItem('xidach_name') || ''}" autofocus />
       <div class="name-modal-actions">
         <button class="btn btn-deal" id="start-btn" style="width: 100%; margin-top: 8px;">VÀO CHƠI</button>
       </div>
@@ -114,6 +124,7 @@ function showNameModal() {
   function start() {
     const name = input.value.trim() || 'Người chơi';
     playerName = name;
+    localStorage.setItem('xidach_name', name);
     modal.remove();
     connectToServer();
     screen = 'lobby';
