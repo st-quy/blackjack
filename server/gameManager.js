@@ -154,6 +154,10 @@ export function createServerGame(roomId) {
         if (players.length < 2) return { ok: false, error: 'Cần ít nhất 2 người chơi' };
         if (state !== GAME_STATE.LOBBY && state !== GAME_STATE.RESULTS) return { ok: false, error: 'Không thể chia bài lúc này' };
 
+        // Only host can deal
+        const requester = getSeatByPlayerId(requesterId);
+        if (!requester || !requester.isHost) return { ok: false, error: 'Chỉ nhà cái mới được chia bài' };
+
         // Keep existing host (persistent host)
         roundNumber++;
 
@@ -481,6 +485,7 @@ export function createServerGame(roomId) {
         get seats() { return seats; },
         get hostSeatIndex() { return hostSeatIndex; },
         get roundNumber() { return roundNumber; },
+        get currentTurnSeatIndex() { return currentTurnSeatIndex; },
         getActivePlayers,
         getActiveNonHostPlayers,
         getHost,

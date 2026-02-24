@@ -47,29 +47,35 @@ function startTurnTimerForRoom(roomId) {
     const room = getRoom(roomId);
     if (!room) return;
 
+    // Timer only for player turns, host has unlimited time
+    if (room.game.state !== GAME_STATE.PLAYER_TURNS) return;
+
     room.game.startTurnTimer(() => {
-        // Timer expired - auto action
+        // Timer expired - auto-stay for current turn player only
         const game = room.game;
         if (game.state === GAME_STATE.PLAYER_TURNS) {
-            const nonHost = game.getActiveNonHostPlayers().filter(p => !p.hasStayed);
-            for (const p of nonHost) {
-                // Try stay first, if can't (score < 16), force hit
-                const stayResult = game.stay(p.id);
+            const currentSeat = game.seats[game.currentTurnSeatIndex];
+            if (currentSeat && !currentSeat.hasStayed) {
+                const stayResult = game.stay(currentSeat.id);
                 if (!stayResult.ok) {
-                    game.hit(p.id);
+                    game.hit(currentSeat.id);
                 }
             }
-        } else if (game.state === GAME_STATE.HOST_TURN) {
-            game.resolveAllUnchecked();
         }
         broadcastGameState(roomId);
-        broadcastRoomList();
+        // Restart timer if still in player turns
+        if (game.state === GAME_STATE.PLAYER_TURNS) {
+            startTurnTimerForRoom(roomId);
+        } else {
+            game.clearTurnTimer();
+            broadcastRoomList();
+        }
     });
 
     // Broadcast timer ticks
     const tickInterval = setInterval(() => {
         const r = getRoom(roomId);
-        if (!r || r.game.state === GAME_STATE.RESULTS || r.game.state === GAME_STATE.LOBBY) {
+        if (!r || r.game.state !== GAME_STATE.PLAYER_TURNS) {
             clearInterval(tickInterval);
             return;
         }
@@ -180,8 +186,8 @@ io.on('connection', (socket) => {
         broadcastGameState(roomId);
         broadcastRoomList();
 
-        // Start turn timer
-        if (room.game.state === GAME_STATE.PLAYER_TURNS || room.game.state === GAME_STATE.HOST_TURN) {
+        // Start turn timer only for player turns (host has no timer)
+        if (room.game.state === GAME_STATE.PLAYER_TURNS) {
             startTurnTimerForRoom(roomId);
         }
     });

@@ -28,6 +28,9 @@ let screen = 'lobby'; // 'lobby' | 'game'
 const TURN_TIME = 15;
 let turnTimeLeft = TURN_TIME;
 
+// Card peek tracking (nặn bài)
+const peekedCards = new Set();
+
 // ============================================================
 //  INIT
 // ============================================================
@@ -279,8 +282,35 @@ function renderSeats() {
       if (player.cards && player.cards.length > 0) {
         const realCards = player.cards.map(c => c.hidden ? { suit: '?', rank: '?', id: 'hidden' } : c);
         const showFace = !player.cards[0]?.hidden;
-        const handEl = renderHand(realCards, showFace, true, false);
-        cardsDiv.appendChild(handEl);
+
+        // Card peek: own cards can be peeked
+        if (isMe && showFace && (gameState.state === GAME_STATE.PLAYER_TURNS || gameState.state === GAME_STATE.HOST_TURN)) {
+          const handDiv = document.createElement('div');
+          handDiv.className = `cards-hand${realCards.length > 3 ? ' compact' : ''}`;
+
+          realCards.forEach((card, idx) => {
+            const container = document.createElement('div');
+            container.className = 'card-container';
+            const isPeeked = peekedCards.has(`${gameState.roundNumber}-${i}-${idx}`);
+            const cardEl = createCardElement(card, true, true);
+
+            if (!isPeeked) {
+              // Show card back until peeked
+              cardEl.classList.remove('flipped');
+              container.style.cursor = 'pointer';
+              container.addEventListener('click', () => {
+                peekedCards.add(`${gameState.roundNumber}-${i}-${idx}`);
+                render();
+              });
+            }
+            container.appendChild(cardEl);
+            handDiv.appendChild(container);
+          });
+          cardsDiv.appendChild(handDiv);
+        } else {
+          const handEl = renderHand(realCards, showFace, true, false);
+          cardsDiv.appendChild(handEl);
+        }
       }
 
       // Player info
@@ -416,15 +446,14 @@ function renderActions() {
       betControls.appendChild(selector);
       bar.appendChild(betControls);
     }
-
-    const dealBtn = createButton('CHIA BÀI', 'btn-deal', () => {
-      socket.emit('set-bet', { amount: selectedBet });
-      socket.emit('deal');
-    });
-    bar.appendChild(dealBtn);
-
-    // Transfer host button (only show if current player is host)
+    // Only host can deal
     if (mySeat.isHost) {
+      const dealBtn = createButton('CHIA BÀI', 'btn-deal', () => {
+        socket.emit('set-bet', { amount: selectedBet });
+        socket.emit('deal');
+      });
+      bar.appendChild(dealBtn);
+
       const otherPlayers = gameState.seats.filter(s => s && !s.isMe);
       if (otherPlayers.length > 0) {
         const transferBtn = createButton('NHƯỜNG CÁI', 'btn-secondary', () => {
@@ -432,6 +461,11 @@ function renderActions() {
         });
         bar.appendChild(transferBtn);
       }
+    } else {
+      const msg = document.createElement('div');
+      msg.style.cssText = 'color:var(--text-secondary);font-size:14px;';
+      msg.textContent = '⏳ Đang chờ nhà cái chia bài...';
+      bar.appendChild(msg);
     }
     return;
   }
@@ -441,18 +475,36 @@ function renderActions() {
     // Timer
     bar.appendChild(createTimerElement());
 
-    // Score hint
-    const scoreHint = document.createElement('div');
-    scoreHint.style.cssText = 'font-size: 13px; margin-right: 12px; text-align: center;';
-    const score = mySeat.score || 0;
-    if (score < 16) {
-      scoreHint.style.color = 'var(--accent-gold)';
-      scoreHint.innerHTML = `Điểm: <b>${score}</b> — Cần ≥ 16 để dừng`;
-    } else {
-      scoreHint.style.color = 'var(--accent-green)';
-      scoreHint.innerHTML = `Điểm: <b>${score}</b>`;
+    // Peek button
+    const myIdx = mySeat.seatIndex;
+    const unpeaked = (mySeat.cards || []).filter((_, idx) => !peekedCards.has(`${gameState.roundNumber}-${myIdx}-${idx}`));
+    if (unpeaked.length > 0) {
+      const peekBtn = createButton('NẶN BÀI', 'btn-secondary', () => {
+        for (let idx = 0; idx < mySeat.cards.length; idx++) {
+          if (!peekedCards.has(`${gameState.roundNumber}-${myIdx}-${idx}`)) {
+            peekedCards.add(`${gameState.roundNumber}-${myIdx}-${idx}`);
+            break;
+          }
+        }
+        render();
+      });
+      bar.appendChild(peekBtn);
     }
-    bar.appendChild(scoreHint);
+
+    // Score hint (only if all cards peeked)
+    if (unpeaked.length === 0) {
+      const scoreHint = document.createElement('div');
+      scoreHint.style.cssText = 'font-size: 13px; margin-right: 12px; text-align: center;';
+      const score = mySeat.score || 0;
+      if (score < 16) {
+        scoreHint.style.color = 'var(--accent-gold)';
+        scoreHint.innerHTML = `Điểm: <b>${score}</b> — Cần ≥ 16 để dừng`;
+      } else {
+        scoreHint.style.color = 'var(--accent-green)';
+        scoreHint.innerHTML = `Điểm: <b>${score}</b>`;
+      }
+      bar.appendChild(scoreHint);
+    }
 
     const hitBtn = createButton('BỐC BÀI', 'btn-hit', () => socket.emit('hit'));
     hitBtn.disabled = !mySeat.canHit;
@@ -464,9 +516,8 @@ function renderActions() {
     return;
   }
 
-  // HOST TURN: Hit/Stay/Check
+  // HOST TURN: Hit/Stay/Check (no timer for host)
   if (state === GAME_STATE.HOST_TURN && mySeat.isHost) {
-    bar.appendChild(createTimerElement());
 
     if (!mySeat.hasStayed) {
       const hitBtn = createButton('BỐC BÀI', 'btn-hit', () => socket.emit('hit'));

@@ -16,8 +16,8 @@
 }
 
 .card.small {
-    width: 55px;
-    height: 78px;
+    width: 45px;
+    height: 64px;
 }
 
 .card.flipped {
@@ -137,10 +137,10 @@
 /* Card Hand Container */
 .cards-hand {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     justify-content: center;
     align-items: flex-end;
-    min-height: 105px;
+    min-height: 70px;
     flex-wrap: nowrap;
 }
 
@@ -154,9 +154,20 @@
 
 /* Stacked overlap for many cards */
 .cards-hand.compact .card-container {
-    margin-left: -20px;
+    margin-left: -15px;
 }
 
 .cards-hand.compact .card-container:first-child {
     margin-left: 0;
+}
+
+/* Card peek (nặn bài) */
+.card-container.peeking .card {
+    transform: rotateY(90deg);
+    transition: transform 0.6s ease;
+}
+
+.card-container.peeking.revealed .card {
+    transform: rotateY(180deg);
+    transition: transform 0.8s ease;
 }
