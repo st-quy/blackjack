@@ -1,0 +1,111 @@
+/* === Lobby Screen === */
+
+.lobby-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-xl) var(--space-2xl);
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.lobby-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-xl);
+}
+
+.lobby-header h2 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--accent-gold);
+}
+
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-md);
+}
+
+.room-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    transition: all var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.room-card:hover {
+    border-color: rgba(240, 192, 64, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.room-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.room-card-name {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.room-card-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.room-card-status.open {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.room-card-status.playing {
+    background: rgba(240, 192, 64, 0.15);
+    color: var(--accent-gold);
+    border: 1px solid rgba(240, 192, 64, 0.3);
+}
+
+.room-card-info {
+    display: flex;
+    gap: var(--space-md);
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.room-join-btn {
+    margin-top: auto;
+    width: 100%;
+}
+
+/* "You" indicator on seat */
+.seat-info.is-me {
+    border-color: var(--accent-green);
+    box-shadow: var(--shadow-glow-green);
+}
+
+.seat-info.is-me .seat-name {
+    color: var(--accent-green);
+}
+
+@media (max-width: 600px) {
+    .lobby-container {
+        padding: var(--space-md);
+    }
+
+    .room-grid {
+        grid-template-columns: 1fr;
+    }
+}

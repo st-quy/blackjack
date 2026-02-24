@@ -1,0 +1,379 @@
+/* === Game Table === */
+
+.game-table-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background particles */
+.game-table-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 30%, rgba(240, 192, 64, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.game-table {
+    position: relative;
+    width: min(900px, 95vw);
+    height: min(560px, 70vh);
+    background: var(--bg-table-felt);
+    border-radius: 50%;
+    border: 5px solid #b8922d;
+    box-shadow:
+        inset 0 0 80px rgba(0, 0, 0, 0.3),
+        0 0 0 3px #8b6914,
+        0 0 0 6px #b8922d,
+        0 0 0 10px rgba(0, 0, 0, 0.3),
+        0 0 60px rgba(0, 0, 0, 0.4),
+        0 0 100px rgba(26, 92, 46, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* Table felt texture overlay */
+.game-table::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+/* Gold rim highlight */
+.game-table::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid rgba(212, 168, 67, 0.3);
+    pointer-events: none;
+}
+
+/* Table center content */
+.table-center {
+    text-align: center;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.table-logo {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    opacity: 0.4;
+    letter-spacing: 2px;
+}
+
+.table-info {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.3);
+    margin-top: var(--space-xs);
+}
+
+/* === Seat Positions === */
+/* Seats arranged in oval around the table */
+
+.seat {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+    transition: transform var(--transition-fast);
+}
+
+/* 10 seat positions around the oval table */
+/* Seat 0: bottom center (human player) */
+.seat[data-seat="0"] {
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Seat 1: bottom-left */
+.seat[data-seat="1"] {
+    bottom: -10px;
+    left: 12%;
+    transform: translate(-20%, 10%);
+}
+
+/* Seat 2: left-lower */
+.seat[data-seat="2"] {
+    bottom: 30%;
+    left: -3%;
+    transform: translateX(-10%);
+}
+
+/* Seat 3: left-upper */
+.seat[data-seat="3"] {
+    top: 15%;
+    left: -3%;
+    transform: translateX(-10%);
+}
+
+/* Seat 4: top-left */
+.seat[data-seat="4"] {
+    top: -55px;
+    left: 20%;
+    transform: translateX(-20%);
+}
+
+/* Seat 5: top center */
+.seat[data-seat="5"] {
+    top: -65px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Seat 6: top-right */
+.seat[data-seat="6"] {
+    top: -55px;
+    right: 20%;
+    transform: translateX(20%);
+}
+
+/* Seat 7: right-upper */
+.seat[data-seat="7"] {
+    top: 15%;
+    right: -3%;
+    transform: translateX(10%);
+}
+
+/* Seat 8: right-lower */
+.seat[data-seat="8"] {
+    bottom: 30%;
+    right: -3%;
+    transform: translateX(10%);
+}
+
+/* Seat 9: bottom-right */
+.seat[data-seat="9"] {
+    bottom: -10px;
+    right: 12%;
+    transform: translate(20%, 10%);
+}
+
+/* Seat player info */
+.seat-info {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    min-width: 120px;
+    text-align: center;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    position: relative;
+}
+
+.seat-info:hover {
+    background: var(--bg-glass-hover);
+    border-color: rgba(240, 192, 64, 0.3);
+}
+
+.seat-info.active {
+    border-color: var(--accent-gold);
+    box-shadow: var(--shadow-glow-gold);
+}
+
+.seat-info.is-host {
+    border-color: var(--accent-red);
+    box-shadow: var(--shadow-glow-red);
+}
+
+.seat-info.is-host .seat-name {
+    color: var(--accent-red);
+}
+
+.seat-empty {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    min-width: 120px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.seat-empty:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.seat-name {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+
+.seat-balance {
+    font-size: 11px;
+    color: var(--text-gold);
+    margin-top: 2px;
+}
+
+.seat-bet {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 1px;
+}
+
+.seat-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--accent-red);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Cards area above/below seats */
+.seat-cards {
+    margin-bottom: var(--space-sm);
+    min-height: 90px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+/* Top seats: cards below info */
+.seat[data-seat="3"] .seat-cards,
+.seat[data-seat="4"] .seat-cards,
+.seat[data-seat="5"] .seat-cards,
+.seat[data-seat="6"] .seat-cards,
+.seat[data-seat="7"] .seat-cards {
+    order: 2;
+    margin-bottom: 0;
+    margin-top: var(--space-sm);
+    align-items: flex-start;
+}
+
+/* Score badge */
+.seat-score {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-dark);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.seat-score.busted {
+    color: var(--accent-red);
+    border-color: var(--accent-red);
+}
+
+.seat-score.blackjack {
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+.seat-score.natural {
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    animation: glow 2s infinite;
+}
+
+/* Result overlay on seat */
+.seat-result {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 800;
+    font-size: 16px;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    z-index: 20;
+    white-space: nowrap;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.seat-result.win {
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    box-shadow: var(--shadow-glow-green);
+}
+
+.seat-result.lose {
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    box-shadow: var(--shadow-glow-red);
+}
+
+.seat-result.tie {
+    background: rgba(59, 130, 246, 0.9);
+    color: white;
+}
+
+.seat-result.host-label {
+    background: rgba(139, 92, 246, 0.9);
+    color: white;
+}
+
+/* Bet chip display */
+.bet-chip {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border: 3px dashed rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    z-index: 15;
+}
+
+.seat[data-seat="0"] .bet-chip,
+.seat[data-seat="1"] .bet-chip,
+.seat[data-seat="2"] .bet-chip,
+.seat[data-seat="8"] .bet-chip,
+.seat[data-seat="9"] .bet-chip {
+    top: -45px;
+}
+
+.seat[data-seat="3"] .bet-chip,
+.seat[data-seat="4"] .bet-chip,
+.seat[data-seat="5"] .bet-chip,
+.seat[data-seat="6"] .bet-chip,
+.seat[data-seat="7"] .bet-chip {
+    bottom: -45px;
+}

@@ -1,0 +1,538 @@
+/* === Components: Buttons, Modals, Overlays === */
+
+/* === Header Bar === */
+.header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm) var(--space-lg);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.header-brand-icon {
+    font-size: 24px;
+}
+
+.header-brand-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-gold), #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-player-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.header-balance {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 4px 12px;
+    border-radius: var(--radius-xl);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.header-balance-icon {
+    color: var(--accent-gold);
+}
+
+.header-balance-amount {
+    color: var(--text-gold);
+}
+
+/* === Action Buttons === */
+.actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: 10px 24px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(255, 255, 255, 0.1), transparent);
+    pointer-events: none;
+}
+
+/* Deal Button */
+.btn-deal {
+    background: linear-gradient(135deg, #f0c040, #d4a020);
+    color: #1a1a2e;
+    box-shadow: 0 4px 15px rgba(240, 192, 64, 0.3);
+}
+
+.btn-deal:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(240, 192, 64, 0.5);
+}
+
+.btn-deal:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Hit Button */
+.btn-hit {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+.btn-hit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(34, 197, 94, 0.5);
+}
+
+/* Stay Button */
+.btn-stay {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-stay:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+}
+
+/* Check Button */
+.btn-check {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.btn-check:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.5);
+}
+
+/* Danger Button (NoHost, etc.) */
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.5);
+}
+
+/* Secondary/Ghost Button */
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+}
+
+/* === Betting Controls === */
+.bet-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.bet-controls label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.bet-selector {
+    display: flex;
+    gap: 4px;
+}
+
+.bet-chip-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, #4a1a1a, #2d1111);
+    color: var(--accent-gold);
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bet-chip-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 15px rgba(240, 192, 64, 0.3);
+}
+
+.bet-chip-btn.selected {
+    background: linear-gradient(135deg, #c0392b, #8b1a1a);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 20px rgba(240, 192, 64, 0.5);
+    transform: scale(1.15);
+}
+
+/* === Result Modal === */
+.result-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.result-modal {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl) var(--space-2xl);
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    animation: fadeInUp 0.5s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.result-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: var(--space-md);
+}
+
+.result-title.win {
+    color: var(--accent-green);
+}
+
+.result-title.lose {
+    color: var(--accent-red);
+}
+
+.result-title.tie {
+    color: var(--accent-blue);
+}
+
+.result-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: var(--space-lg) 0;
+}
+
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+
+.result-row-name {
+    font-weight: 600;
+}
+
+.result-row-hand {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.result-payout {
+    font-weight: 700;
+}
+
+.result-payout.positive {
+    color: var(--accent-green);
+}
+
+.result-payout.negative {
+    color: var(--accent-red);
+}
+
+.result-payout.zero {
+    color: var(--text-muted);
+}
+
+/* === Toast Notifications === */
+.toast-container {
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.toast {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    font-size: 13px;
+    color: var(--text-primary);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    animation: slideInRight 0.3s ease;
+    max-width: 300px;
+    backdrop-filter: blur(10px);
+}
+
+.toast.info {
+    border-left: 3px solid var(--accent-blue);
+}
+
+.toast.success {
+    border-left: 3px solid var(--accent-green);
+}
+
+.toast.error {
+    border-left: 3px solid var(--accent-red);
+}
+
+.toast.warning {
+    border-left: 3px solid var(--accent-gold);
+}
+
+/* === Status Message === */
+.game-status {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-xl);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-gold);
+    z-index: 50;
+    white-space: nowrap;
+    border: 1px solid rgba(240, 192, 64, 0.2);
+    animation: fadeInUp 0.3s ease;
+}
+
+/* === Name Input Modal === */
+.name-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.name-modal-content {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    width: 360px;
+    text-align: center;
+    animation: fadeInUp 0.5s ease;
+}
+
+.name-modal-content h2 {
+    font-family: var(--font-display);
+    color: var(--accent-gold);
+    margin-bottom: var(--space-lg);
+}
+
+.name-input {
+    width: 100%;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 16px;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.name-input:focus {
+    border-color: var(--accent-gold);
+}
+
+.name-input::placeholder {
+    color: var(--text-muted);
+}
+
+.name-modal-actions {
+    margin-top: var(--space-lg);
+}
+
+/* === Turn Timer === */
+.turn-timer {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.turn-timer svg {
+    position: absolute;
+    inset: 0;
+}
+
+.turn-timer-text {
+    position: relative;
+    z-index: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Pulse when time is low */
+@keyframes timerPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.08);
+    }
+}
+
+.turn-timer.urgent {
+    animation: timerPulse 0.6s ease-in-out infinite;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .game-table {
+        width: 95vw;
+        height: 55vh;
+    }
+
+    .seat-info,
+    .seat-empty {
+        min-width: 80px;
+        padding: 4px 8px;
+    }
+
+    .seat-name {
+        font-size: 11px;
+        max-width: 70px;
+    }
+
+    .card {
+        width: 50px;
+        height: 72px;
+    }
+
+    .card .card-rank {
+        font-size: 10px;
+    }
+
+    .card .card-suit-top {
+        font-size: 9px;
+    }
+
+    .card .card-center-suit {
+        font-size: 18px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+
+    .header-brand-name {
+        font-size: 16px;
+    }
+
+    .table-logo {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-table {
+        height: 50vh;
+    }
+
+    .actions-bar {
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+    }
+
+    .bet-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
