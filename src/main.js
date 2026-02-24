@@ -475,12 +475,16 @@ function renderActions() {
 
       const stayBtn = createButton('DỪNG', 'btn-stay', () => socket.emit('stay'));
       const hostScore = mySeat.score || 0;
-      stayBtn.disabled = hostScore < 16 && (mySeat.cards?.length || 0) < 5;
+      const hostCards = mySeat.cards?.length || 0;
+      // Host can stay with 15+ if 2 cards, or 16+ otherwise, or 5 cards
+      stayBtn.disabled = !((hostCards === 2 && hostScore >= 15) || hostScore >= 16 || hostCards >= 5);
       bar.appendChild(stayBtn);
     }
 
-    // Check buttons
-    const canCheck = (mySeat.score || 0) >= 16 || (mySeat.cards?.length || 0) >= 5;
+    // Check buttons — host can check with 15+ (2 cards) or 16+
+    const hostScore = mySeat.score || 0;
+    const hostCards = mySeat.cards?.length || 0;
+    const canCheck = (hostCards === 2 && hostScore >= 15) || hostScore >= 16 || hostCards >= 5;
     if (canCheck) {
       // Check All button
       const unchecked = gameState.seats.filter(p => p && !p.isHost && !p.isChecked);

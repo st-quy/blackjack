@@ -70,7 +70,8 @@ export function createServerGame(roomId) {
                 if (!player) return null;
                 const isMe = player.id === playerId;
                 const showCards = shouldShowCards(player, playerId);
-                const isMyTurn = state === GAME_STATE.PLAYER_TURNS && i === currentTurnSeatIndex && isMe;
+                const isMyTurn = (state === GAME_STATE.PLAYER_TURNS && i === currentTurnSeatIndex && isMe)
+                    || (state === GAME_STATE.HOST_TURN && player.isHost && isMe);
                 return {
                     seatIndex: i,
                     name: player.name,
@@ -283,35 +284,57 @@ export function createServerGame(roomId) {
         return { ok: true };
     }
 
+    function hostCanCheck(host) {
+        const hostScore = getBestScore(host.cards);
+        // Host with 15+ and exactly 2 cards can check
+        if (host.cards.length === 2 && hostScore >= 15) return true;
+        // Otherwise need 16+
+        if (hostScore >= MIN_VALID_SCORE) return true;
+        // Or 5 cards (Ngũ Linh)
+        if (host.cards.length >= 5) return true;
+        return false;
+    }
+
     function hostCheck(playerId, targetSeatIndex) {
         if (state !== GAME_STATE.HOST_TURN) return { ok: false };
         const host = getHost();
         if (!host || host.id !== playerId) return { ok: false, error: 'Bạn không phải nhà cái' };
 
-        const hostScore = getBestScore(host.cards);
-        if (hostScore < MIN_VALID_SCORE && host.cards.length < 5) {
-            return { ok: false, error: 'Nhà cái cần ít nhất 16 điểm để xét bài' };
+        if (!hostCanCheck(host)) {
+            return { ok: false, error: 'Nhà cái chưa đủ điểm để xét bài' };
         }
 
         const target = seats[targetSeatIndex];
         if (!target || target.isHost || target.isChecked) return { ok: false };
 
-        const multiplier = getPayoutMultiplier(target.cards, host.cards);
+        const targetHand = classifyHand(target.cards);
         target.isChecked = true;
 
-        if (multiplier > 0) {
-            target.result = 'win';
-            target.payout = target.bet * multiplier;
-            target.balance += target.payout;
-            host.balance -= target.payout;
-        } else if (multiplier < 0) {
+        // PENALTY: player under 16 without Ngũ Linh pays penalty
+        if (targetHand.type === HAND_TYPE.INVALID) {
+            // Pay each other player's bet to host
+            const allBets = getActiveNonHostPlayers().reduce((sum, p) => sum + p.bet, 0);
             target.result = 'lose';
-            target.payout = target.bet * multiplier;
-            target.balance += target.payout;
-            host.balance -= target.payout;
+            target.payout = -allBets;
+            target.balance -= allBets;
+            host.balance += allBets;
         } else {
-            target.result = 'tie';
-            target.payout = 0;
+            // Normal payout
+            const multiplier = getPayoutMultiplier(target.cards, host.cards);
+            if (multiplier > 0) {
+                target.result = 'win';
+                target.payout = target.bet * multiplier;
+                target.balance += target.payout;
+                host.balance -= target.payout;
+            } else if (multiplier < 0) {
+                target.result = 'lose';
+                target.payout = target.bet * multiplier;
+                target.balance += target.payout;
+                host.balance -= target.payout;
+            } else {
+                target.result = 'tie';
+                target.payout = 0;
+            }
         }
 
         const unchecked = getActiveNonHostPlayers().filter(p => !p.isChecked);
@@ -327,23 +350,34 @@ export function createServerGame(roomId) {
     function resolveAllUnchecked() {
         const host = getHost();
         if (!host) return;
+        const allBets = getActiveNonHostPlayers().reduce((sum, p) => sum + p.bet, 0);
         const unchecked = getActiveNonHostPlayers().filter(p => !p.isChecked);
         unchecked.forEach(p => {
-            const multiplier = getPayoutMultiplier(p.cards, host.cards);
+            const hand = classifyHand(p.cards);
             p.isChecked = true;
-            if (multiplier > 0) {
-                p.result = 'win';
-                p.payout = p.bet * multiplier;
-                p.balance += p.payout;
-                host.balance -= p.payout;
-            } else if (multiplier < 0) {
+
+            // PENALTY: player under 16 without Ngũ Linh
+            if (hand.type === HAND_TYPE.INVALID) {
                 p.result = 'lose';
-                p.payout = p.bet * multiplier;
-                p.balance += p.payout;
-                host.balance -= p.payout;
+                p.payout = -allBets;
+                p.balance -= allBets;
+                host.balance += allBets;
             } else {
-                p.result = 'tie';
-                p.payout = 0;
+                const multiplier = getPayoutMultiplier(p.cards, host.cards);
+                if (multiplier > 0) {
+                    p.result = 'win';
+                    p.payout = p.bet * multiplier;
+                    p.balance += p.payout;
+                    host.balance -= p.payout;
+                } else if (multiplier < 0) {
+                    p.result = 'lose';
+                    p.payout = p.bet * multiplier;
+                    p.balance += p.payout;
+                    host.balance -= p.payout;
+                } else {
+                    p.result = 'tie';
+                    p.payout = 0;
+                }
             }
         });
         finishRound();
@@ -463,9 +497,8 @@ export function createServerGame(roomId) {
             if (state !== GAME_STATE.HOST_TURN) return { ok: false };
             const host = getHost();
             if (!host || host.id !== playerId) return { ok: false, error: 'Bạn không phải nhà cái' };
-            const hostScore = getBestScore(host.cards);
-            if (hostScore < MIN_VALID_SCORE && host.cards.length < 5) {
-                return { ok: false, error: 'Nhà cái cần ít nhất 16 điểm để xét bài' };
+            if (!hostCanCheck(host)) {
+                return { ok: false, error: 'Nhà cái chưa đủ điểm để xét bài' };
             }
             resolveAllUnchecked();
             return { ok: true };
