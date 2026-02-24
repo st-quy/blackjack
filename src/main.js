@@ -289,21 +289,19 @@ function renderSeats() {
           handDiv.className = `cards-hand${realCards.length > 3 ? ' compact' : ''}`;
 
           realCards.forEach((card, idx) => {
-            const container = document.createElement('div');
-            container.className = 'card-container';
             const isPeeked = peekedCards.has(`${gameState.roundNumber}-${i}-${idx}`);
-            const cardEl = createCardElement(card, true, true);
+            // createCardElement returns container with .card inside
+            const container = createCardElement(card, isPeeked, true);
+            const innerCard = container.querySelector('.card');
 
             if (!isPeeked) {
-              // Show card back until peeked
-              cardEl.classList.remove('flipped');
+              // Card shows back; click to peek
               container.style.cursor = 'pointer';
               container.addEventListener('click', () => {
                 peekedCards.add(`${gameState.roundNumber}-${i}-${idx}`);
                 render();
               });
             }
-            container.appendChild(cardEl);
             handDiv.appendChild(container);
           });
           cardsDiv.appendChild(handDiv);
