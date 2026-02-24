@@ -37,9 +37,11 @@ function init() {
 }
 
 function connectToServer() {
-  const serverUrl = window.location.hostname === 'localhost'
+  // In production, client is served by the same server, so connect to same origin
+  // In dev, Vite runs on 5173 and server on 3001
+  const serverUrl = import.meta.env.DEV
     ? 'http://localhost:3001'
-    : window.location.origin;
+    : undefined; // undefined = same origin
 
   socket = io(serverUrl);
 

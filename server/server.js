@@ -1,8 +1,13 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { createRoom, getRoom, listRooms, deleteRoom, ensureDefaultRooms } from './roomManager.js';
 import { GAME_STATE } from '../src/engine/constants.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
@@ -284,6 +289,13 @@ function leaveRoom(socket, roomId) {
     }
     socketRooms.delete(socket.id);
 }
+
+// Serve Vite build output in production
+const distPath = path.join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+});
 
 httpServer.listen(PORT, () => {
     console.log(`🃏 Xì Dách Server running on http://localhost:${PORT}`);
