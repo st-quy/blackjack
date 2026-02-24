@@ -5,9 +5,8 @@ import {
 
 /**
  * Get all possible scores for a hand, considering Ace flexibility.
- * - 2 cards: Ace = 10 or 11
- * - 3 cards with 1 Ace: Ace = 10 or 11
- * - 3+ cards with 2+ Aces: ALL Aces = 1 (can draw toward Ngũ Linh)
+ * - ≤3 cards, 1 Ace: Ace = 1, 10, or 11
+ * - 3+ cards, 2+ Aces: ALL Aces = 1 (can draw toward Ngũ Linh)
  * - 4+ cards: Ace = 1
  */
 function getPossibleScores(cards) {
@@ -19,14 +18,14 @@ function getPossibleScores(cards) {
         let values;
         if (card.rank === 'A') {
             if (cardCount >= 3 && aceCount >= 2) {
-                // 3+ cards with 2+ Aces: each Ace = 1
+                // 3+ cards with 2+ Aces: each Ace = 1 only
                 values = [1];
             } else if (cardCount >= 4) {
-                // 4+ cards: Ace = 1
+                // 4+ cards: Ace = 1 only
                 values = [1];
             } else {
-                // 2-3 cards with 1 Ace: Ace = 10 or 11
-                values = [10, 11];
+                // ≤3 cards with 1 Ace: Ace = 1, 10, or 11
+                values = [1, 10, 11];
             }
         } else {
             values = [RANK_VALUES[card.rank]];
