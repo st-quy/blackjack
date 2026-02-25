@@ -319,8 +319,14 @@ function renderSeats() {
         info.style.opacity = '0.4';
       }
 
-      // Score badge
-      if (player.score !== null && player.score !== undefined) {
+      // Score badge - hide if own cards not all peeked
+      const isActiveGame = gameState.state === GAME_STATE.PLAYER_TURNS || gameState.state === GAME_STATE.HOST_TURN;
+      let allPeeked = true;
+      if (isMe && isActiveGame && player.cards && player.cards.length > 0 && !player.cards[0]?.hidden) {
+        allPeeked = player.cards.every((_, idx) => peekedCards.has(`${gameState.roundNumber}-${i}-${idx}`));
+      }
+
+      if (player.score !== null && player.score !== undefined && (!isMe || !isActiveGame || allPeeked)) {
         const scoreBadge = document.createElement('div');
         let scoreClass = '';
         let scoreText = `${player.score}`;
