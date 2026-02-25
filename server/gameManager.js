@@ -201,27 +201,25 @@ export function createServerGame(roomId) {
         return { ok: true };
     }
 
-    // Get first turn seat: rightmost non-host non-stayed player
+    // Get first turn seat: first non-host player to the RIGHT of host (going right-to-left from host)
     function getFirstTurnSeatIndex() {
-        for (let i = MAX_SEATS - 1; i >= 0; i--) {
-            if (seats[i] && !seats[i].isHost && !seats[i].hasStayed) {
-                return i;
+        // Start from seat to the right of host (hostSeatIndex + 1), wrap around
+        for (let offset = 1; offset < MAX_SEATS; offset++) {
+            const idx = (hostSeatIndex + offset) % MAX_SEATS;
+            if (seats[idx] && !seats[idx].isHost && !seats[idx].hasStayed) {
+                return idx;
             }
         }
         return -1;
     }
 
-    // Get next turn: right-to-left, skip host and stayed players
+    // Get next turn: continue right-to-left from current seat (relative to host)
     function getNextTurnSeatIndex(currentSeat) {
-        for (let i = currentSeat - 1; i >= 0; i--) {
-            if (seats[i] && !seats[i].isHost && !seats[i].hasStayed) {
-                return i;
-            }
-        }
-        // Wrap around from the right
-        for (let i = MAX_SEATS - 1; i > currentSeat; i--) {
-            if (seats[i] && !seats[i].isHost && !seats[i].hasStayed) {
-                return i;
+        // Continue from currentSeat+1, wrapping around, but skip host
+        for (let offset = 1; offset < MAX_SEATS; offset++) {
+            const idx = (currentSeat + offset) % MAX_SEATS;
+            if (seats[idx] && !seats[idx].isHost && !seats[idx].hasStayed) {
+                return idx;
             }
         }
         return -1; // No more players
