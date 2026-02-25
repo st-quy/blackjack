@@ -495,6 +495,18 @@ function renderActions() {
       bar.appendChild(peekBtn);
     }
 
+    // Flip-down button (úp bài) - show when any cards are peeked
+    const peekedCount = (mySeat.cards || []).filter((_, idx) => peekedCards.has(`${gameState.roundNumber}-${myIdx}-${idx}`)).length;
+    if (peekedCount > 0) {
+      const flipBtn = createButton('ÚP BÀI', 'btn-secondary', () => {
+        for (let idx = 0; idx < mySeat.cards.length; idx++) {
+          peekedCards.delete(`${gameState.roundNumber}-${myIdx}-${idx}`);
+        }
+        render();
+      });
+      bar.appendChild(flipBtn);
+    }
+
     // Score hint (only if all cards peeked)
     if (unpeaked.length === 0) {
       const scoreHint = document.createElement('div');

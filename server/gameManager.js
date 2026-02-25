@@ -89,7 +89,7 @@ export function createServerGame(roomId) {
                     hand: showCards && player.cards.length > 0 ? classifyHand(player.cards) : null,
                     score: showCards && player.cards.length > 0 ? getBestScore(player.cards) : null,
                     canHit: isMe && isMyTurn ? canHit(player.cards) : false,
-                    canStay: isMe && isMyTurn ? (getBestScore(player.cards) >= MIN_VALID_SCORE || player.cards.length >= 5) && !player.hasStayed : false,
+                    canStay: isMe && isMyTurn ? (getBestScore(player.cards) >= MIN_VALID_SCORE || player.cards.length >= 5 || classifyHand(player.cards).type === HAND_TYPE.BUSTED) && !player.hasStayed : false,
                 };
             }),
         };
@@ -248,12 +248,14 @@ export function createServerGame(roomId) {
 
         const hand = classifyHand(player.cards);
         let autoStayed = false;
-        if (hand.type === HAND_TYPE.BUSTED || !canHit(player.cards)) {
+        // Only auto-stay for non-busted cases (e.g., Ngũ Linh 5 cards)
+        // Busted players must manually press DỪNG
+        if (!canHit(player.cards) && hand.type !== HAND_TYPE.BUSTED) {
             player.hasStayed = true;
             autoStayed = true;
         }
 
-        // Advance turn if player finished
+        // Advance turn if player finished (but NOT for busted - let them press DỪNG)
         if (state === GAME_STATE.PLAYER_TURNS && autoStayed) {
             advanceTurn();
         }
@@ -272,7 +274,9 @@ export function createServerGame(roomId) {
         if (state === GAME_STATE.PLAYER_TURNS && player.seatIndex !== currentTurnSeatIndex) return { ok: false, error: 'Chưa đến lượt bạn' };
 
         const score = getBestScore(player.cards);
-        if (score < MIN_VALID_SCORE && player.cards.length < 5) {
+        const hand = classifyHand(player.cards);
+        // Allow stay when busted (quắc) - player must press DỪNG manually
+        if (score < MIN_VALID_SCORE && player.cards.length < 5 && hand.type !== HAND_TYPE.BUSTED) {
             return { ok: false, error: 'Cần ít nhất 16 điểm để dừng' };
         }
 
