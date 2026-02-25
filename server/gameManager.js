@@ -316,8 +316,8 @@ export function createServerGame(roomId) {
         const targetHand = classifyHand(target.cards);
         target.isChecked = true;
 
-        // PENALTY: player under 16 without Ngũ Linh pays penalty
-        if (targetHand.type === HAND_TYPE.INVALID) {
+        // PENALTY: player under 16 or busted over 27 pays penalty
+        if (targetHand.type === HAND_TYPE.INVALID || (targetHand.type === HAND_TYPE.BUSTED && targetHand.score > 27)) {
             // Pay each other player's bet to host
             const allBets = getActiveNonHostPlayers().reduce((sum, p) => sum + p.bet, 0);
             target.result = 'lose';
@@ -362,8 +362,8 @@ export function createServerGame(roomId) {
             const hand = classifyHand(p.cards);
             p.isChecked = true;
 
-            // PENALTY: player under 16 without Ngũ Linh
-            if (hand.type === HAND_TYPE.INVALID) {
+            // PENALTY: player under 16 or busted over 27
+            if (hand.type === HAND_TYPE.INVALID || (hand.type === HAND_TYPE.BUSTED && hand.score > 27)) {
                 p.result = 'lose';
                 p.payout = -allBets;
                 p.balance -= allBets;
