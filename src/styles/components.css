@@ -9,7 +9,7 @@
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    z-index: 100;
+    z-index: 200;
     flex-shrink: 0;
 }
 
@@ -69,6 +69,8 @@
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     flex-shrink: 0;
+    position: relative;
+    z-index: 200;
 }
 
 .btn {
